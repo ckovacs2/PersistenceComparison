@@ -9,16 +9,16 @@ def read_xyz_file(filepath: str):
     z=np.loadtxt(filepath,dtype=float,usecols=(3),skiprows=2)
     return pd.DataFrame({'element':element, 'x':x, "y":y, "z":z})
 
-def construct_file_frame(xyz_dir:str = "xyz_data"):
-    outpath = os.path.join(xyz_dir, "filepath.csv")
+def construct_file_frame(xyz_dir:str = "/workspaces/PersistenceComparison/xyz_data"):
+    outpath = os.path.join(xyz_dir, "filepaths.csv")
     if os.path.exists(outpath):
         return pd.read_csv(outpath)
     
     datastores = [os.path.join(xyz_dir, dir) for dir in os.listdir(xyz_dir) if not dir.startswith('.') and dir != 'gas_only']
-    filepaths = [(os.path.join(ds, file), ds.lstrip("xyz_data/"), int(file.rstrip(".xyz"))) for ds in datastores for file in os.listdir(ds) if not file.startswith(".")]
+    filepaths = [(os.path.join(ds, file), ds.split('/')[-1], int(file.rstrip(".xyz"))) for ds in datastores for file in os.listdir(ds) if not file.startswith(".")]
     dataframe = pd.DataFrame(filepaths, columns = ["Filepath", "Dir", "Filename"])
     dataframe = dataframe.sort_values(['Dir', 'Filename'])
     dataframe['Filename'] = dataframe['Filename'].apply(lambda x: str(x) + '.xyz')
     dataframe = dataframe.reset_index(drop = True)
-    dataframe['XYZ'] = dataframe['Filepath'].apply(lambda x: read_xyz_file(x))
+    dataframe.to_csv(outpath, index=False)
     return dataframe
